@@ -12,7 +12,9 @@ from collections import deque
 import boto3
 import re
 import os
+import errno
 import logging
+import requests
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -20,6 +22,8 @@ logger.setLevel(logging.INFO)
 DEFAULT_LICENSE = os.environ['DEFAULT_LICENSE'] if 'DEFAULT_LICENSE' in os.environ else 'mit'
 DEFAULT_HOST = os.environ['DEFAULT_HOST'] if 'DEFAULT_HOST' in os.environ else 'code-license.org'
 DYNAMODB_TABLE = os.environ['DYNAMODB_TABLE'] if 'DYNAMODB_TABLE' in os.environ else False
+GITHUB_BASE_URL = os.environ['GITHUB_BASE_URL'] if 'GITHUB_BASE_URL' in os.environ \
+    else 'https://raw.githubusercontent.com/angrychimp/code-license/d3ecbce8b7eaea86/code-license/templates/'
 
 class LicenseError(Exception):
     def __init__(self, *args):
@@ -55,7 +59,7 @@ class License:
             try:
                 val = parts.popleft()
                 logger.info("Query option: '%s'", val)
-            except Exception as e:
+            except:
                 val = False
             if not val or len(val) == 0:
                 continue
@@ -112,6 +116,34 @@ class License:
         s.feed(self.content)
         self.content = s.get_data()
 
+    def _get_jinja_env(self):
+        if 'hash' in self.config:
+            # Create local hash folder
+            template_path = '/tmp/templates/' + self.config['hash']
+            try:
+                os.makedirs(template_path)
+            except OSError as e:
+                if e.errno == errno.EEXIST and os.path.isdir(template_path):
+                    pass
+                else:
+                    raise
+            # Fetch license file from git
+            local_file = template_path + self.config['license'] + '.j2'
+            if not os.path.isfile(local_file):
+                remote_file = GITHUB_BASE_URL + self.config['license'] + '.j2'
+                r = requests.get(remote_file, stream=True)
+                with open(local_file, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=1024):
+                        f.write(chunk)
+        else:
+            template_path = 'templates'
+
+        env = Environment(
+            loader=FileSystemLoader(template_path),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        return env
+
     def build(self):
         # Process host
         if self.host.find(DEFAULT_HOST) < 0:
@@ -129,12 +161,7 @@ class License:
 
         logger.info(self.config)
 
-        if 'hash' in self.config
-        
-        env = Environment(
-            loader=FileSystemLoader('templates'),
-            autoescape=select_autoescape(['html', 'xml'])
-        )
+        env = self._get_jinja_env()
         try:
             template = env.get_template(self.config['license'].lower() + '.j2')
             self.content = template.render(self.config)
