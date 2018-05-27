@@ -6,7 +6,7 @@ info:
 host: "${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com"
 basePath: "/devel"
 schemes:
-- "http"
+- "https"
 paths:
   /:
     get:
