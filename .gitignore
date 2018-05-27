@@ -1,0 +1,11 @@
+# pip packages and cache
+__pycache__
+*.dist-info
+bin
+certifi
+chardet
+idna
+jinja2
+markupsafe
+requests
+urllib3

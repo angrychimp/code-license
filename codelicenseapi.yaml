@@ -1,0 +1,33 @@
+---
+swagger: "2.0"
+info:
+  version: "2018-05-27T15:25:42Z"
+  title: "CodeLicense"
+host: "${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com"
+basePath: "/devel"
+schemes:
+- "http"
+paths:
+  /:
+    get:
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+  /{proxy+}:
+    x-amazon-apigateway-any-method:
+      produces:
+      - "application/json"
+      parameters:
+      - name: "proxy"
+        in: "path"
+        required: true
+        type: "string"
+      responses: {}
+definitions:
+  Empty:
+    type: "object"
+    title: "Empty Schema"

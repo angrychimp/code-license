@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html id="home" lang="en">
+<head>
+<title>Apache 2.0 License</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.7">
+<!-- for HTML5 el styling -->
+<script>document.createElement('article');document.createElement('footer');</script>
+<link rel="stylesheet" href="/themes/{{ theme }}.css">
+</head>
+<body>
+<article>
+{% if gravatar is defined and email is defined and gravatar == True -%}
+{% if url is defined %}<a href="{{ url }}">{% endif -%}
+<img src="https://www.gravatar.com/avatar/{{ email_md5 }}" />
+{%- if url is defined %}</a>{% endif %}
+{%- endif %}
+<h1>The Apache License, Version 2.0 (Apache-2.0)</h1>
+<p>Copyright &copy; {{ year }} {% if url is defined %}<a href="{{ url }}">{% endif %}{{ copyright }}{% if url is defined %}</a>{% endif %}{% if email is defined %} &lt;<a href="mailto:{{ email }}">{{ email }}</a>&gt;{% endif %}</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at</p>
+
+<p><a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+
+<p>Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.</p>
+</article>
+<footer>
+<p><a href="https://github.com/angrychimp/code-license">Create your own online license for your software projects.</a></p>
+</footer>
+</body>
+</html>

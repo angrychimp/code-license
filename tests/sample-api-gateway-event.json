@@ -1,0 +1,50 @@
+{
+    "resource": "/",
+    "path": "/",
+    "httpMethod": "GET",
+    "headers": {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate",
+        "cache-control": "no-cache",
+        "CloudFront-Forwarded-Proto": "https",
+        "CloudFront-Is-Desktop-Viewer": "true",
+        "CloudFront-Is-Mobile-Viewer": "false",
+        "CloudFront-Is-SmartTV-Viewer": "false",
+        "CloudFront-Is-Tablet-Viewer": "false",
+        "CloudFront-Viewer-Country": "US",
+        "Content-Type": "application/json",
+        "Host": "angrychimp.code-license.org",
+        "User-Agent": "Generic",
+        "X-Forwarded-For": "127.0.0.1 127.0.0.2",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https"
+    },
+    "queryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": {},
+    "requestContext": {
+        "accountId": "1234567890",
+        "resourceId": "abcdef",
+        "stage": "dev",
+        "requestId": "7e5eb71b-0000-0000-0000-cfa412d97f81",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "apiKey": "placeholder",
+            "sourceIp": "127.0.0.1",
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Generic",
+            "user": null
+        },
+        "resourcePath": "/",
+        "httpMethod": "GET",
+        "apiId": "placeholder"
+    },
+    "body": null,
+    "isBase64Encoded": false
+}

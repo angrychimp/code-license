@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    code-license.org
+
+    Generates a custom, web-hosted license file for a user
+    
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+
+Resources:
+    CodeLicenseApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: devel
+            DefinitionUri: ./codelicenseapi.yaml
+
+    CodeLicenseFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: code-license/
+            Handler: index.handler
+            Runtime: python3.6
+            Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+                Variables:
+                    DYNAMODB_TABLE: code-license-users
+                    DEFAULT_LICENSE: mit
+                    DEFAULT_HOST: code-license.org
+            Events:
+                ProxyApiRoot:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CodeLicenseApi
+                        Path: /
+                        Method: ANY
+                ProxyApiGreedy:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        RestApiId: !Ref CodeLicenseApi
+                        Path: /{proxy+}
+                        Method: ANY
+
+Outputs:
+    CodeLicenseApi:
+      Description: "API Gateway endpoint URL for devel stage for CodeLicense function"
+      Value: !Sub "https://${CodeLicenseApi}.execute-api.${AWS::Region}.amazonaws.com/devel/codelicense/"
+      # Value: !Join
+      #     - ''
+      #     - - https://
+      #       - !Ref CodeLicenseApi
+      #       - '.execute-api.'
+      #       - !Reg 'AWS::Region'
+      #       - '.amazonaws.com/devel'
+      
+    CodeLicenseFunction:
+      Description: "CodeLicense Lambda Function ARN"
+      Value: !GetAtt CodeLicenseFunction.Arn
+
+    CodeLicenseFunctionRole:
+      Description: "Implicit IAM Role created for CodeLicense function"
+      Value: !GetAtt CodeLicenseFunctionRole.Arn
