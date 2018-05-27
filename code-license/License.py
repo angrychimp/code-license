@@ -22,8 +22,8 @@ logger.setLevel(logging.INFO)
 DEFAULT_LICENSE = os.environ['DEFAULT_LICENSE'] if 'DEFAULT_LICENSE' in os.environ else 'mit'
 DEFAULT_HOST = os.environ['DEFAULT_HOST'] if 'DEFAULT_HOST' in os.environ else 'code-license.org'
 DYNAMODB_TABLE = os.environ['DYNAMODB_TABLE'] if 'DYNAMODB_TABLE' in os.environ else False
-GITHUB_BASE_URL = os.environ['GITHUB_BASE_URL'] if 'GITHUB_BASE_URL' in os.environ \
-    else 'https://raw.githubusercontent.com/angrychimp/code-license/d3ecbce8b7eaea86/code-license/templates/'
+GITHUB_URL = os.environ['GITHUB_BASE_URL'] if 'GITHUB_BASE_URL' in os.environ \
+    else 'https://raw.githubusercontent.com/angrychimp/code-license/{hash}/code-license/templates/{license}.j2'
 
 class LicenseError(Exception):
     def __init__(self, *args):
@@ -80,7 +80,7 @@ class License:
                 else:
                     options['year'] = m.group(0)
                 continue
-            if re.match(r"^([a-f0-9])$", val):
+            if re.match(r"^([a-f0-9])+$", val):
                 # commit hash to pin
                 options['hash'] = val
                 continue
@@ -118,8 +118,10 @@ class License:
 
     def _get_jinja_env(self):
         if 'hash' in self.config:
+            logger.info('Fetching template "%s" at commit %s', self.config['license'], self.config['hash'])
             # Create local hash folder
             template_path = '/tmp/templates/' + self.config['hash']
+            logger.info("Defined template path: " + template_path)
             try:
                 os.makedirs(template_path)
             except OSError as e:
@@ -128,13 +130,15 @@ class License:
                 else:
                     raise
             # Fetch license file from git
-            local_file = template_path + self.config['license'] + '.j2'
+            local_file = "%s/%s.j2" % (template_path, self.config['license'])
             if not os.path.isfile(local_file):
-                remote_file = GITHUB_BASE_URL + self.config['license'] + '.j2'
+                remote_file = GITHUB_URL.format(hash=self.config['hash'], license=self.config['license'])
+                logger.info("Download %s to %s" % (remote_file, local_file))
                 r = requests.get(remote_file, stream=True)
                 with open(local_file, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=1024):
                         f.write(chunk)
+                f.close()
         else:
             template_path = 'templates'
 
