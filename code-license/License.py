@@ -17,7 +17,6 @@ import logging
 import requests
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 DEFAULT_LICENSE = os.environ['DEFAULT_LICENSE'] if 'DEFAULT_LICENSE' in os.environ else 'mit'
 DEFAULT_HOST = os.environ['DEFAULT_HOST'] if 'DEFAULT_HOST' in os.environ else 'code-license.org'
@@ -52,7 +51,10 @@ class License:
         self.host = kwargs['Host']
         self.query = kwargs['Parameters']
     
-    def parse_query(self):
+    def __str__(self):
+        return self.content
+
+    def _parse_query(self):
         parts = deque(self.query.split('/'))
         logger.info(parts)
         options = {}
@@ -89,7 +91,7 @@ class License:
             
         self.query_options = {**self.query_options, **options}
         
-    def fetch_user_data(self):
+    def _fetch_user_data(self):
         client = boto3.client('dynamodb')
         response = client.query(
             TableName=DYNAMODB_TABLE,
@@ -111,7 +113,7 @@ class License:
 
         self.userdata = data
     
-    def to_text(self):
+    def _to_text(self):
         from LicenseStripper import LicenseStripper
         s = LicenseStripper()
         s.feed(self.content)
@@ -162,10 +164,10 @@ class License:
             self.query_options['license'] = '.'.join(parts)
             logger.info('Using domain-specified license: %s', self.query_options['license'])
         
-        self.parse_query()
+        self._parse_query()
 
         if self.username:
-            self.fetch_user_data()
+            self._fetch_user_data()
 
         logger.info("Merging configs: %s", {'default': self.config, 'dynamo': self.userdata, 'query': self.query_options})
         self.config = {**self.config, **self.userdata, **self.query_options}
@@ -178,10 +180,7 @@ class License:
         except:
             raise LicenseError(503, "License template not found: " + self.config['license'])
         if 'format' in self.config and self.config['format'] == 'txt':
-            self.to_text()
+            self._to_text()
     
     def get_format(self):
         return 'text/plain' if self.config['format'] == 'txt' else 'text/html'
-
-    def __str__(self):
-        return self.content
