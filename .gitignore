@@ -9,3 +9,8 @@ jinja2
 markupsafe
 requests
 urllib3
+
+# sam documents
+sam-template.yaml
+*.zip
+package.sh

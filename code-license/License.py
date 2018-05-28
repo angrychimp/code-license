@@ -32,9 +32,11 @@ class LicenseError(Exception):
 
 class License:
 
-    ''' Member variables '''
-    query_options = {}
+    ''' Initialize member variables '''
     config = {}
+    query_options = {}
+    userdata = {}
+    username = False
 
     def __init__(self, **kwargs):
         # Define default configuration
@@ -43,7 +45,7 @@ class License:
             'gravatar': False,
             'theme': 'default',
             'format': 'html',
-            'copyright': '<copyright holders>',
+            'copyright': '',
             'version': 'latest',
             'year': datetime.now().strftime('%Y')
         }
@@ -107,8 +109,7 @@ class License:
         if 'email' in data:
             data['email_md5'] = md5(data['email'].encode('utf-8')).hexdigest()
 
-        logger.info("Merging configs: %s", {'default': self.config, 'dynamo': data, 'query': self.query_options})
-        self.config = {**self.config, **data, **self.query_options}
+        self.userdata = data
     
     def to_text(self):
         from LicenseStripper import LicenseStripper
@@ -153,16 +154,21 @@ class License:
         if self.host.find(DEFAULT_HOST) < 0:
             raise LicenseError(406, "Host not acceptable: " + self.host)
         parts = self.host.replace(DEFAULT_HOST, '').split('.')[0:-1]
-        self.username = parts.pop()
-        logger.info("Remaining domain parts: %s", parts)
+        logger.info("Subdomain parts: %s", parts)
+        if len(parts) > 0:
+            self.username = parts.pop()
         if len(parts) > 0:
             # For now, ignore anything other than the right-most part
             self.query_options['license'] = '.'.join(parts)
             logger.info('Using domain-specified license: %s', self.query_options['license'])
         
         self.parse_query()
-        self.fetch_user_data()
 
+        if self.username:
+            self.fetch_user_data()
+
+        logger.info("Merging configs: %s", {'default': self.config, 'dynamo': self.userdata, 'query': self.query_options})
+        self.config = {**self.config, **self.userdata, **self.query_options}
         logger.info(self.config)
 
         env = self._get_jinja_env()

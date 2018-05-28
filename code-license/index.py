@@ -49,9 +49,12 @@ def handler(event={}, context={}):
         else:
             return respond(404, {"error": {"messageString": "Theme not found"}})
 
-    license = License (
+    parameters = event['pathParameters']['proxy'] if 'pathParameters' in event \
+        and event['pathParameters'] and 'proxy' in event['pathParameters'] \
+        else event['path']
+    license = License(
         Host=event['headers']['Host'],
-        Parameters=event['pathParameters']['proxy']
+        Parameters=parameters
     )
     try:
         license.build()
