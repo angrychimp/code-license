@@ -48,8 +48,10 @@ class License:
             'year': datetime.now().strftime('%Y')
         }
         self.host = kwargs['Host']
+        self.headers = kwargs['Headers']
         self.query = kwargs['Parameters']
         self.logger = kwargs['Logger']
+        self.logger.info(self.headers)
     
     def __str__(self):
         return self.content
@@ -89,6 +91,16 @@ class License:
                 if os.path.isfile("templates/{0}.j2".format(val)):
                     options['license'] = val
             
+        self.query_options = {**self.query_options, **options}
+    
+    def _parse_headers(self):
+        options = {}
+
+        if 'X-License-Theme' in self.headers:
+            theme = self.headers['X-License-Theme']
+            if os.path.isfile("themes/{0}.css".format(theme)):
+                options['theme'] = theme
+        
         self.query_options = {**self.query_options, **options}
         
     def _fetch_user_data(self):
@@ -166,6 +178,7 @@ class License:
                 self.logger.info('Using domain-specified license: %s', self.query_options['license'])
         
         self._parse_query()
+        self._parse_headers()
 
         if self.username:
             self._fetch_user_data()
