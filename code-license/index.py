@@ -54,7 +54,8 @@ def handler(event={}, context={}):
         else event['path']
     license = License(
         Host=event['headers']['Host'],
-        Parameters=parameters
+        Parameters=parameters,
+        Logger=logger
     )
     try:
         license.build()

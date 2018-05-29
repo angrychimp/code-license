@@ -16,8 +16,6 @@ import errno
 import logging
 import requests
 
-logger = logging.getLogger()
-
 DEFAULT_LICENSE = os.environ['DEFAULT_LICENSE'] if 'DEFAULT_LICENSE' in os.environ else 'mit'
 DEFAULT_HOST = os.environ['DEFAULT_HOST'] if 'DEFAULT_HOST' in os.environ else 'code-license.org'
 DYNAMODB_TABLE = os.environ['DYNAMODB_TABLE'] if 'DYNAMODB_TABLE' in os.environ else False
@@ -50,19 +48,20 @@ class License:
         }
         self.host = kwargs['Host']
         self.query = kwargs['Parameters']
+        self.logger = kwargs['Logger']
     
     def __str__(self):
         return self.content
 
     def _parse_query(self):
         parts = deque(self.query.split('/'))
-        logger.info(parts)
+        self.logger.info(parts)
         options = {}
         val = True
         while val:
             try:
                 val = parts.popleft()
-                logger.info("Query option: '%s'", val)
+                self.logger.info("Query option: '%s'", val)
             except:
                 val = False
             if not val or len(val) == 0:
@@ -72,22 +71,22 @@ class License:
                 # Specify user
                 # (allows for users with names that cannot go in the domain)
                 self.username = parts.popleft()
-                continue
-            if re.match(r"license\.(txt|html)", val):
+            elif re.match(r"license\.(txt|html)", val):
                 options['format'] = val.split('.')[1]
-                continue
-            if re.match(r"(@)?([0-9]{4})(-([0-9]{4}))?", val):
+            elif re.match(r"(@)?([0-9]{4})(-([0-9]{4}))?", val):
                 m = re.match(r"(@)?([0-9]{4})(-([0-9]{4}))?$", val)
                 if m.group(1) == '@':
                     # Pin to single year
                     options['year'] = m.group(2)
                 else:
                     options['year'] = m.group(0)
-                continue
-            if re.match(r"^([a-f0-9])+$", val):
+            elif re.match(r"^([a-f0-9])+$", val):
                 # commit hash to pin
                 options['hash'] = val
-                continue
+            else:
+                # Check to see if the paramter is a license spec
+                if os.path.isfile("templates/{0}.j2".format(val)):
+                    options['license'] = val
             
         self.query_options = {**self.query_options, **options}
         
@@ -121,10 +120,10 @@ class License:
 
     def _get_jinja_env(self):
         if 'hash' in self.config:
-            logger.info('Fetching template "%s" at commit %s', self.config['license'], self.config['hash'])
+            self.logger.info('Fetching template "%s" at commit %s', self.config['license'], self.config['hash'])
             # Create local hash folder
             template_path = '/tmp/templates/' + self.config['hash']
-            logger.info("Defined template path: " + template_path)
+            self.logger.info("Defined template path: " + template_path)
             try:
                 os.makedirs(template_path)
             except OSError as e:
@@ -136,7 +135,7 @@ class License:
             local_file = "%s/%s.j2" % (template_path, self.config['license'])
             if not os.path.isfile(local_file):
                 remote_file = GITHUB_URL.format(hash=self.config['hash'], license=self.config['license'])
-                logger.info("Download %s to %s" % (remote_file, local_file))
+                self.logger.info("Download %s to %s" % (remote_file, local_file))
                 r = requests.get(remote_file, stream=True)
                 with open(local_file, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=1024):
@@ -156,22 +155,22 @@ class License:
         if self.host.find(DEFAULT_HOST) < 0:
             raise LicenseError(406, "Host not acceptable: " + self.host)
         parts = self.host.replace(DEFAULT_HOST, '').split('.')[0:-1]
-        logger.info("Subdomain parts: %s", parts)
+        self.logger.info("Subdomain parts: %s", parts)
         if len(parts) > 0:
             self.username = parts.pop()
         if len(parts) > 0:
             # For now, ignore anything other than the right-most part
             self.query_options['license'] = '.'.join(parts)
-            logger.info('Using domain-specified license: %s', self.query_options['license'])
+            self.logger.info('Using domain-specified license: %s', self.query_options['license'])
         
         self._parse_query()
 
         if self.username:
             self._fetch_user_data()
 
-        logger.info("Merging configs: %s", {'default': self.config, 'dynamo': self.userdata, 'query': self.query_options})
+        self.logger.info("Merging configs: %s", {'default': self.config, 'dynamo': self.userdata, 'query': self.query_options})
         self.config = {**self.config, **self.userdata, **self.query_options}
-        logger.info(self.config)
+        self.logger.info(self.config)
 
         env = self._get_jinja_env()
         try:
