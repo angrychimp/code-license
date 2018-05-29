@@ -19,6 +19,7 @@ import requests
 DEFAULT_LICENSE = os.environ['DEFAULT_LICENSE'] if 'DEFAULT_LICENSE' in os.environ else 'mit'
 DEFAULT_HOST = os.environ['DEFAULT_HOST'] if 'DEFAULT_HOST' in os.environ else 'code-license.org'
 DYNAMODB_TABLE = os.environ['DYNAMODB_TABLE'] if 'DYNAMODB_TABLE' in os.environ else False
+CHECK_HOST = True if 'CHECK_HOST' in os.environ and os.environ['CHECK_HOST'] == 'true' else False
 GITHUB_URL = os.environ['GITHUB_BASE_URL'] if 'GITHUB_BASE_URL' in os.environ \
     else 'https://raw.githubusercontent.com/angrychimp/code-license/{hash}/code-license/templates/{license}.j2'
 
@@ -146,22 +147,23 @@ class License:
 
         env = Environment(
             loader=FileSystemLoader(template_path),
-            autoescape=select_autoescape(['html', 'xml'])
+            autoescape=select_autoescape(['html','htm','j2'])
         )
         return env
 
     def build(self):
         # Process host
-        if self.host.find(DEFAULT_HOST) < 0:
-            raise LicenseError(406, "Host not acceptable: " + self.host)
-        parts = self.host.replace(DEFAULT_HOST, '').split('.')[0:-1]
-        self.logger.info("Subdomain parts: %s", parts)
-        if len(parts) > 0:
-            self.username = parts.pop()
-        if len(parts) > 0:
-            # For now, ignore anything other than the right-most part
-            self.query_options['license'] = '.'.join(parts)
-            self.logger.info('Using domain-specified license: %s', self.query_options['license'])
+        if CHECK_HOST:
+            if self.host.find(DEFAULT_HOST) < 0:
+                raise LicenseError(406, "Host not acceptable: " + self.host)
+            parts = self.host.replace(DEFAULT_HOST, '').split('.')[0:-1]
+            self.logger.info("Subdomain parts: %s", parts)
+            if len(parts) > 0:
+                self.username = parts.pop()
+            if len(parts) > 0:
+                # For now, ignore anything other than the right-most part
+                self.query_options['license'] = '.'.join(parts)
+                self.logger.info('Using domain-specified license: %s', self.query_options['license'])
         
         self._parse_query()
 
