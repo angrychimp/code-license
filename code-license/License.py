@@ -82,7 +82,10 @@ class License:
                     # Pin to single year
                     options['year'] = m.group(2)
                 else:
-                    options['year'] = m.group(0)
+                    if not m.group(4):
+                        options['year'] = "{0}-{1}".format(m.group(2), datetime.now().strftime('%Y'))
+                    else:
+                        options['year'] = m.group(0)
             elif re.match(r"^([a-f0-9])+$", val):
                 # commit hash to pin
                 options['hash'] = val
