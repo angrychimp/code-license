@@ -7,7 +7,7 @@ h1 { margin-top: 0; }
 article p:first-of-type { margin-top: 1.6em; }
 article p:last-child { margin-bottom: 0; }
 footer {  margin: 0em auto 2em auto; text-align: center; }
-footer a { color: #666; text-shadow: 0 1px 1px #999; text-decoration:none; font-size:.8em; padding: 1em; }
+footer a { color: #666; text-shadow: 0 1px 1px #000; text-decoration:none; font-size:.8em; padding: 1em; }
 /*footer a:before{content: "â¦";  font-size:1.5em; padding-right:.2em; } */
 footer a:hover, footer a:focus { color: white; }
 h1 {font-weight:normal; display:inline; border-bottom:1px solid #999; padding:0 0 3px 0; line-height: 36px; }
