@@ -14,3 +14,4 @@ urllib3
 sam-template.yaml
 *.zip
 package.sh
+publish.sh
