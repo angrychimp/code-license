@@ -1,0 +1,17 @@
+@import url(https://fonts.googleapis.com/css?family=Inconsolata);
+
+article h1 {
+  font-weight: 600;
+  padding: 60px 0.4em 0.1em 0.4em;
+  font-family: "Inconsolata", "DejaVu Sans Mono","Bitstream Vera Sans Mono", monospace;
+}
+
+article h1 + p {
+  font-size: 1.2em;
+  font-weight: 600;
+  font-family: "Inconsolata", "DejaVu Sans Mono","Bitstream Vera Sans Mono", monospace;
+}
+
+yodawg {
+    font-weight: 600;
+}
